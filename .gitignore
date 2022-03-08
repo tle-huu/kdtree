@@ -1,0 +1,7 @@
+# Build
+
+build/
+
+# clang format
+
+.clang-format
