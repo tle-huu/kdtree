@@ -50,6 +50,16 @@ public:
                 return values_[best];
         }
 
+        std::vector<size_t> find_neighbors(const T& element, Float radius)
+        {
+                std::vector<size_t> neighbors;
+                Float best_dist = std::numeric_limits<Float>::max();
+
+                find_neighbors_aux(root_.get(), element, radius * radius,
+                                   /* depth */ 0, neighbors);
+                return neighbors;
+        }
+
 private:
         struct Node
         {
@@ -89,7 +99,8 @@ private:
                 std::nth_element(
                     indices.begin() + static_cast<std::ptrdiff_t>(i), m,
                     indices.begin() + static_cast<std::ptrdiff_t>(j),
-                    [this, axis](size_t ind_a, size_t ind_b) {
+                    [this, axis](size_t ind_a, size_t ind_b)
+                    {
                             const T& a = values_[ind_a];
                             const T& b = values_[ind_b];
                             return comp_(get_coord_(a, axis),
@@ -136,6 +147,50 @@ private:
                         {
                                 find_nn_aux(node->left.get(), element,
                                             depth + 1, best, best_dist);
+                        }
+                }
+        }
+
+        void find_neighbors_aux(const Node* node, const T& element,
+                                Float squared_radius, int depth,
+                                std::vector<size_t>& neighbors)
+        {
+                if (node == nullptr) return;
+
+                const T& value = values_[node->index];
+
+                Float current_dist = squared_distance(element, value);
+
+                if (current_dist < squared_radius)
+                {
+                        neighbors.emplace_back(node->index);
+                }
+
+                int axis = depth % DIMENSION;
+                if (get_coord_(element, axis) < get_coord_(value, axis))
+                {
+                        find_neighbors_aux(node->left.get(), element,
+                                           squared_radius, depth + 1,
+                                           neighbors);
+                        if (get_coord_(value, axis) <
+                            squared_radius + get_coord_(element, axis))
+                        {
+                                find_neighbors_aux(node->right.get(), element,
+                                                   squared_radius, depth + 1,
+                                                   neighbors);
+                        }
+                }
+                else
+                {
+                        find_neighbors_aux(node->right.get(), element,
+                                           squared_radius, depth + 1,
+                                           neighbors);
+                        if (get_coord_(element, axis) <
+                            squared_radius + get_coord_(value, axis))
+                        {
+                                find_neighbors_aux(node->left.get(), element,
+                                                   squared_radius, depth + 1,
+                                                   neighbors);
                         }
                 }
         }
