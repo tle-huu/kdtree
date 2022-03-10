@@ -6,7 +6,28 @@
 <img src=https://github.com/tle-huu/kdtree/wiki/images/kdtree_nn.png width=512 height=auto>
 </p>
 
+## Description
+
+* Simple
+* Lightweight
+* Static Kdtree
+* Header only
+* Nearest neighbor search
+* k-Nearest neighbors search
+* Neighbors search within a radius
+
+## Documentation
+
+The Kdtree needs to be provided a GetCoord function along with the object type and the dimension.
+The GetCoord function is meant to access the n-th coordinate of the objects.
+
 ## Examples code
+
+An example of code is provided in examples/.
+
+The code generate some random 2D points and create a Kdtree from them.
+It then generate a random 2D points and search for its nearest neighbors and its neighbors within a radius.
+
 ### How to build
 ```
 $ git clone https://github.com/tle-huu/kdtree.git
