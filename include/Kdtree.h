@@ -9,10 +9,7 @@
 
 namespace kdtree
 {
-// TODO: Make this a template parameter
-static constexpr int DIMENSION = 2;
-
-template <typename T, typename GetCoord, typename Float = float,
+template <typename T, int DIMENSION, typename GetCoord, typename Float = float,
           typename Compare = std::less<Float>>
 class Kdtree
 {

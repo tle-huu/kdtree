@@ -41,9 +41,9 @@ int main()
                 if (axis == 0) return p.x;
                 return p.y;
         };
-
         // Create Kdtree
-        kdtree::Kdtree<Point, decltype(get_coord)> tree(points, get_coord);
+        kdtree::Kdtree<Point, /* Dimension */ 2, decltype(get_coord)> tree(
+            points, get_coord);
 
         // Generate point whose neighbors we want to find
         file << "# gold\n";
