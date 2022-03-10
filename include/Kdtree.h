@@ -36,7 +36,7 @@ public:
         root_ = make_kd_tree_from_vector(indices, 0, values.size());
     }
 
-    const T& find_nn(const T& element)
+    const T& find_nn(const T& element) const noexcept
     {
         size_t best = std::numeric_limits<size_t>::max();
         Float best_dist = std::numeric_limits<Float>::max();
@@ -45,7 +45,7 @@ public:
         return values_[best];
     }
 
-    std::vector<size_t> find_knn(const T& element, int k)
+    std::vector<size_t> find_knn(const T& element, int k) const noexcept
     {
         assert(k > 0);
 
@@ -63,7 +63,8 @@ public:
         return ret;
     }
 
-    std::vector<size_t> find_neighbors(const T& element, Float radius)
+    std::vector<size_t> find_neighbors(const T& element,
+                                       Float radius) const noexcept
     {
         std::vector<size_t> neighbors;
         find_neighbors_aux(root_.get(), element, radius * radius,
@@ -99,7 +100,7 @@ private:
         // ------------------------------------------------------------
         // MaxHeap Member Mutators
         // ------------------------------------------------------------
-        void push(const U& value)
+        void push(const U& value) noexcept
         {
             if (values_.size() == capacity_ && Comp()(value, values_[0]))
             {
@@ -116,7 +117,7 @@ private:
         // ------------------------------------------------------------
         // MaxHeap Member Accessors
         // ------------------------------------------------------------
-        const U& head() { return values_[0]; }
+        const U& head() const noexcept { return values_[0]; }
 
         size_t size() noexcept { return values_.size(); }
         size_t capacity() noexcept { return values_.capacity(); }
@@ -138,13 +139,11 @@ private:
         size_t capacity_;
         std::vector<U> values_;
 
-        size_t parent(size_t k) { return (k - 1) / 2; }
+        size_t left(size_t k) const noexcept { return 2 * k + 1; }
 
-        size_t left(size_t k) { return 2 * k + 1; }
+        size_t right(size_t k) const noexcept { return 2 * k + 2; }
 
-        size_t right(size_t k) { return 2 * k + 2; }
-
-        void bubble_down(size_t index)
+        void bubble_down(size_t index) noexcept
         {
             while (left(index) < values_.size())
             {
@@ -209,7 +208,7 @@ private:
     }
 
     void find_nn_aux(const Node* node, const T& element, int depth,
-                     size_t& best, Float& best_dist)
+                     size_t& best, Float& best_dist) const
     {
         if (node == nullptr) return;
 
@@ -280,7 +279,7 @@ private:
 
     void find_neighbors_aux(const Node* node, const T& element,
                             Float squared_radius, int depth,
-                            std::vector<size_t>& neighbors)
+                            std::vector<size_t>& neighbors) const noexcept
     {
         if (node == nullptr) return;
 
@@ -318,7 +317,7 @@ private:
         }
     }
 
-    Float squared_distance(const T& a, const T& b)
+    Float squared_distance(const T& a, const T& b) const noexcept
     {
         Float distance = 0;
         for (int d = 0; d < DIMENSION; ++d)
@@ -329,7 +328,7 @@ private:
         return distance;
     }
 
-    Float squared(Float number) { return number * number; }
+    Float squared(Float number) const noexcept { return number * number; }
 };
 
 }  // namespace kdtree
