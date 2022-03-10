@@ -9,8 +9,7 @@
 
 namespace kdtree
 {
-template <typename T, int DIMENSION, typename GetCoord, typename Float = float,
-          typename Compare = std::less<Float>>
+template <typename T, int DIMENSION, typename GetCoord, typename Float = float>
 class Kdtree
 {
     static_assert(std::is_arithmetic_v<Float>);
@@ -18,18 +17,10 @@ class Kdtree
                       std::invoke_result_t<GetCoord, const T&, int>, Float>,
                   "GetCoord must be a callable whose signature is Float(const "
                   "T&, int)");
-    static_assert(
-        std::is_convertible_v<
-            std::invoke_result_t<Compare, const Float&, const Float&>, bool>,
-        "GetMedian must be a callable whose signature is "
-        "bool(const T&, "
-        "const "
-        "T&))");
 
 public:
-    Kdtree(const std::vector<T>& values, const GetCoord& get_coord = GetCoord(),
-           const Compare& comp = Compare())
-        : values_(values), comp_(comp), get_coord_(get_coord)
+    Kdtree(const std::vector<T>& values, const GetCoord& get_coord = GetCoord())
+        : values_(values), get_coord_(get_coord)
     {
         std::vector<size_t> indices(values.size());
         std::iota(std::begin(indices), std::end(indices), 0);
@@ -167,7 +158,6 @@ private:
     using KnnMaxHeap = MaxHeap<std::pair<Float, size_t>>;
 
     const std::vector<T>& values_;
-    Compare comp_;
     GetCoord get_coord_;
     std::unique_ptr<Node> root_ = nullptr;
 
@@ -201,8 +191,7 @@ private:
                          {
                              const T& a = values_[ind_a];
                              const T& b = values_[ind_b];
-                             return comp_(get_coord_(a, axis),
-                                          get_coord_(b, axis));
+                             return get_coord_(a, axis) < get_coord_(b, axis);
                          });
         return indices[(j + i) / 2];
     }
