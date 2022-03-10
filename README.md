@@ -1,4 +1,4 @@
-# K-d tree
+# Kdtree
 
 `Kdtree` is a C++ implementation of a [kdtree](https://en.wikipedia.org/wiki/K-d_tree).
 
