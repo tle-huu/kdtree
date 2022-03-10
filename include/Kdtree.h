@@ -23,7 +23,8 @@ class Kdtree
             std::is_convertible_v<
                 std::invoke_result_t<Compare, const Float&, const Float&>,
                 bool>,
-            "GetMedian must be a callable whose signature is bool(const T&, "
+            "GetMedian must be a callable whose signature is "
+            "bool(const T&, "
             "const "
             "T&))");
 
@@ -43,15 +44,33 @@ public:
                 size_t best = std::numeric_limits<size_t>::max();
                 Float best_dist = std::numeric_limits<Float>::max();
 
-                find_nn_aux(root_.get(), element, 0, best, best_dist);
+                find_nn_aux(root_.get(), element, /* depth */ 0, best,
+                            best_dist);
                 return values_[best];
+        }
+
+        std::vector<size_t> find_knn(const T& element, int k)
+        {
+                assert(k > 0);
+
+                KnnMaxHeap neighbors(k);
+                Float best_dist = std::numeric_limits<Float>::max();
+
+                find_knn_aux(root_.get(), element, /* depth */ 0, best_dist,
+                             neighbors);
+
+                std::vector<size_t> ret;
+                ret.reserve(neighbors.size());
+                for (auto& p : neighbors)
+                {
+                        ret.push_back(p.second);
+                }
+                return ret;
         }
 
         std::vector<size_t> find_neighbors(const T& element, Float radius)
         {
                 std::vector<size_t> neighbors;
-                Float best_dist = std::numeric_limits<Float>::max();
-
                 find_neighbors_aux(root_.get(), element, radius * radius,
                                    /* depth */ 0, neighbors);
                 return neighbors;
@@ -64,6 +83,101 @@ private:
                 std::unique_ptr<Node> left = nullptr;
                 std::unique_ptr<Node> right = nullptr;
         };
+
+        template <typename U, typename Comp = std::less<U>>
+        class MaxHeap
+        {
+        public:
+                using iterator = typename std::vector<U>::iterator;
+                using const_iterator = typename std::vector<U>::const_iterator;
+
+                // -------------------------------------------------------------
+                // MaxHeap Constructor
+                // -------------------------------------------------------------
+                MaxHeap() = delete;
+                MaxHeap(size_t capacity) : capacity_(capacity)
+                {
+                        assert(capacity > 0);
+                        values_.reserve(capacity);
+                }
+
+                // ------------------------------------------------------------
+                // MaxHeap Member Mutators
+                // ------------------------------------------------------------
+                void push(const U& value)
+                {
+                        if (values_.size() == capacity_ &&
+                            Comp()(value, values_[0]))
+                        {
+                                values_[0] = value;
+                                bubble_down(0);
+                        }
+                        else if (values_.size() < capacity_)
+                        {
+                                values_.push_back(value);
+                                std::push_heap(values_.begin(), values_.end());
+                        }
+                }
+
+                // ------------------------------------------------------------
+                // MaxHeap Member Accessors
+                // ------------------------------------------------------------
+                const U& head() { return values_[0]; }
+
+                size_t size() noexcept { return values_.size(); }
+                size_t capacity() noexcept { return values_.capacity(); }
+
+                // Returns an `iterator` to the beginning of the inlined vector.
+                iterator begin() noexcept { return values_.begin(); }
+
+                // Returns a `const_iterator` to the beginning of the inlined
+                // vector.
+                const iterator begin() const noexcept
+                {
+                        return values_.begin();
+                }
+
+                // Returns an `iterator` to the end of the inlined vector.
+                iterator end() noexcept { return values_.end(); }
+
+                // Returns a `const_iterator` to the end of the inlined vector.
+                const iterator end() const noexcept { return values_.end(); }
+
+        private:
+                size_t capacity_;
+                std::vector<U> values_;
+
+                size_t parent(size_t k) { return (k - 1) / 2; }
+
+                size_t left(size_t k) { return 2 * k + 1; }
+
+                size_t right(size_t k) { return 2 * k + 2; }
+
+                void bubble_down(size_t index)
+                {
+                        while (left(index) < values_.size())
+                        {
+                                size_t largest = index;
+                                if (Comp()(values_[largest],
+                                           values_[left(index)]))
+                                        largest = left(index);
+                                if (right(index) < values_.size() &&
+                                    Comp()(values_[largest],
+                                           values_[right(index)]))
+                                        largest = right(index);
+                                if (largest != index)
+                                {
+                                        std::swap(values_[index],
+                                                  values_[largest]);
+                                        index = largest;
+                                        continue;
+                                }
+                                break;
+                        }
+                }
+        };
+
+        using KnnMaxHeap = MaxHeap<std::pair<Float, size_t>>;
 
         const std::vector<T>& values_;
         Compare comp_;
@@ -148,6 +262,41 @@ private:
                 }
         }
 
+        void find_knn_aux(const Node* node, const T& element, int depth,
+                          Float& best_dist, KnnMaxHeap& neighbors)
+        {
+                if (node == nullptr) return;
+
+                const T& value = values_[node->index];
+
+                Float current_dist = squared_distance(element, value);
+
+                neighbors.push({current_dist, node->index});
+
+                if (current_dist < best_dist)
+                {
+                        best_dist = current_dist;
+                }
+
+                int axis = depth % DIMENSION;
+                Node* next = get_coord_(element, axis) < get_coord_(value, axis)
+                                 ? node->left.get()
+                                 : node->right.get();
+                Node* other_child =
+                    get_coord_(element, axis) < get_coord_(value, axis)
+                        ? node->right.get()
+                        : node->left.get();
+                find_knn_aux(next, element, depth + 1, best_dist, neighbors);
+                if (neighbors.size() < neighbors.capacity() ||
+                    squared(std::abs(get_coord_(element, axis) -
+                                     get_coord_(value, axis))) <
+                        neighbors.head().first)
+                {
+                        find_knn_aux(other_child, element, depth + 1, best_dist,
+                                     neighbors);
+                }
+        }
+
         void find_neighbors_aux(const Node* node, const T& element,
                                 Float squared_radius, int depth,
                                 std::vector<size_t>& neighbors)
@@ -202,6 +351,8 @@ private:
                 }
                 return distance;
         }
+
+        Float squared(Float number) { return number * number; }
 };
 
 }  // namespace kdtree
