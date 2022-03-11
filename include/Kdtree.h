@@ -27,6 +27,7 @@ public:
         root_ = make_kd_tree_from_vector(indices, 0, values.size());
     }
 
+    // Returns a const reference to the nearest neighbor
     const T& find_nn(const T& element) const noexcept
     {
         size_t best = std::numeric_limits<size_t>::max();
@@ -36,6 +37,7 @@ public:
         return values_[best];
     }
 
+    // Returns the indices of the k nearest neighbors
     std::vector<size_t> find_knn(const T& element, int k) const noexcept
     {
         assert(k > 0);
@@ -54,6 +56,7 @@ public:
         return ret;
     }
 
+    // Returns the indices of the nearest neighbors withing 'radius' distance
     std::vector<size_t> find_neighbors(const T& element,
                                        Float radius) const noexcept
     {
@@ -71,6 +74,7 @@ private:
         std::unique_ptr<Node> right = nullptr;
     };
 
+    // Bounded max heap
     template <typename U, typename Comp = std::less<U>>
     class MaxHeap
     {
@@ -111,6 +115,7 @@ private:
         const U& head() const noexcept { return values_[0]; }
 
         size_t size() noexcept { return values_.size(); }
+
         size_t capacity() noexcept { return values_.capacity(); }
 
         // Returns an `iterator` to the beginning of the inlined vector.
@@ -127,9 +132,6 @@ private:
         const iterator end() const noexcept { return values_.end(); }
 
     private:
-        size_t capacity_;
-        std::vector<U> values_;
-
         size_t left(size_t k) const noexcept { return 2 * k + 1; }
 
         size_t right(size_t k) const noexcept { return 2 * k + 2; }
@@ -153,13 +155,11 @@ private:
                 break;
             }
         }
+
+        size_t capacity_;
+        std::vector<U> values_;
     };
-
     using KnnMaxHeap = MaxHeap<std::pair<Float, size_t>>;
-
-    const std::vector<T>& values_;
-    GetCoord get_coord_;
-    std::unique_ptr<Node> root_ = nullptr;
 
     std::unique_ptr<Node> make_kd_tree_from_vector(std::vector<size_t>& indices,
                                                    size_t i, size_t j,
@@ -289,6 +289,10 @@ private:
     }
 
     Float squared(Float number) const noexcept { return number * number; }
+
+    const std::vector<T>& values_;
+    GetCoord get_coord_;
+    std::unique_ptr<Node> root_ = nullptr;
 };
 
 }  // namespace kdtree
