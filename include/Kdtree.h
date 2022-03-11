@@ -75,7 +75,7 @@ private:
     };
 
     // Bounded max heap
-    template <typename U, typename Comp = std::less<U>>
+    template <typename U>
     class MaxHeap
     {
     public:
@@ -97,7 +97,7 @@ private:
         // ------------------------------------------------------------
         void push(const U& value) noexcept
         {
-            if (values_.size() == capacity_ && Comp()(value, values_[0]))
+            if (values_.size() == capacity_ && value < values_[0])
             {
                 values_[0] = value;
                 bubble_down(0);
@@ -141,10 +141,10 @@ private:
             while (left(index) < values_.size())
             {
                 size_t largest = index;
-                if (Comp()(values_[largest], values_[left(index)]))
+                if (values_[largest] < values_[left(index)])
                     largest = left(index);
                 if (right(index) < values_.size() &&
-                    Comp()(values_[largest], values_[right(index)]))
+                    values_[largest] < values_[right(index)])
                     largest = right(index);
                 if (largest != index)
                 {
