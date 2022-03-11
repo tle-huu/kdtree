@@ -202,9 +202,7 @@ private:
         if (node == nullptr) return;
 
         const T& value = values_[node->index];
-
         Float current_dist = squared_distance(element, value);
-
         if (current_dist < best_dist)
         {
             best_dist = current_dist;
@@ -212,51 +210,36 @@ private:
         }
 
         int axis = depth % DIMENSION;
-
-        // This if else could be avoided with the use of abs
-        if (get_coord_(element, axis) < get_coord_(value, axis))
+        auto [next, other_child] =
+            get_coord_(element, axis) < get_coord_(value, axis)
+                ? std::pair<Node*, Node*>{node->left.get(), node->right.get()}
+                : std::pair<Node*, Node*>{node->right.get(), node->left.get()};
+        find_nn_aux(next, element, depth + 1, best, best_dist);
+        if (squared(std::abs(get_coord_(element, axis) -
+                             get_coord_(value, axis))) < best_dist)
         {
-            find_nn_aux(node->left.get(), element, depth + 1, best, best_dist);
-            if (get_coord_(value, axis) < best_dist + get_coord_(element, axis))
-            {
-                find_nn_aux(node->right.get(), element, depth + 1, best,
-                            best_dist);
-            }
-        }
-        else
-        {
-            find_nn_aux(node->right.get(), element, depth + 1, best, best_dist);
-            if (get_coord_(element, axis) < best_dist + get_coord_(value, axis))
-            {
-                find_nn_aux(node->left.get(), element, depth + 1, best,
-                            best_dist);
-            }
+            find_nn_aux(other_child, element, depth + 1, best, best_dist);
         }
     }
 
     void find_knn_aux(const Node* node, const T& element, int depth,
-                      Float& best_dist, KnnMaxHeap& neighbors)
+                      Float& best_dist, KnnMaxHeap& neighbors) const noexcept
     {
         if (node == nullptr) return;
 
         const T& value = values_[node->index];
-
         Float current_dist = squared_distance(element, value);
-
         neighbors.push({current_dist, node->index});
-
         if (current_dist < best_dist)
         {
             best_dist = current_dist;
         }
 
         int axis = depth % DIMENSION;
-        Node* next = get_coord_(element, axis) < get_coord_(value, axis)
-                         ? node->left.get()
-                         : node->right.get();
-        Node* other_child = get_coord_(element, axis) < get_coord_(value, axis)
-                                ? node->right.get()
-                                : node->left.get();
+        auto [next, other_child] =
+            get_coord_(element, axis) < get_coord_(value, axis)
+                ? std::pair<Node*, Node*>{node->left.get(), node->right.get()}
+                : std::pair<Node*, Node*>{node->right.get(), node->left.get()};
         find_knn_aux(next, element, depth + 1, best_dist, neighbors);
         if (neighbors.size() < neighbors.capacity() ||
             squared(std::abs(get_coord_(element, axis) -
@@ -273,36 +256,24 @@ private:
         if (node == nullptr) return;
 
         const T& value = values_[node->index];
-
         Float current_dist = squared_distance(element, value);
-
         if (current_dist < squared_radius)
         {
             neighbors.emplace_back(node->index);
         }
 
         int axis = depth % DIMENSION;
-        if (get_coord_(element, axis) < get_coord_(value, axis))
+        auto [next, other_child] =
+            get_coord_(element, axis) < get_coord_(value, axis)
+                ? std::pair<Node*, Node*>{node->left.get(), node->right.get()}
+                : std::pair<Node*, Node*>{node->right.get(), node->left.get()};
+        find_neighbors_aux(next, element, squared_radius, depth + 1, neighbors);
+
+        if (squared(std::abs(get_coord_(element, axis) -
+                             get_coord_(value, axis))) < squared_radius)
         {
-            find_neighbors_aux(node->left.get(), element, squared_radius,
-                               depth + 1, neighbors);
-            if (get_coord_(value, axis) <
-                squared_radius + get_coord_(element, axis))
-            {
-                find_neighbors_aux(node->right.get(), element, squared_radius,
-                                   depth + 1, neighbors);
-            }
-        }
-        else
-        {
-            find_neighbors_aux(node->right.get(), element, squared_radius,
-                               depth + 1, neighbors);
-            if (get_coord_(element, axis) <
-                squared_radius + get_coord_(value, axis))
-            {
-                find_neighbors_aux(node->left.get(), element, squared_radius,
-                                   depth + 1, neighbors);
-            }
+            find_neighbors_aux(other_child, element, squared_radius, depth + 1,
+                               neighbors);
         }
     }
 
