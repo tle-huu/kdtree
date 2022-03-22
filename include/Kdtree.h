@@ -56,7 +56,7 @@ public:
         return ret;
     }
 
-    // Returns the indices of the nearest neighbors withing 'radius' distance
+    // Returns the indices of the nearest neighbors within 'radius' distance
     std::vector<size_t> find_neighbors(const T& element,
                                        Float radius) const noexcept
     {

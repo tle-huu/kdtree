@@ -25,8 +25,8 @@ The GetCoord function is meant to access the n-th coordinate of the objects.
 
 An example of code is provided in examples/.
 
-The code generate some random 2D points and create a Kdtree from them.
-It then generate a random 2D points and search for its nearest neighbors and its neighbors within a radius.
+The program generates some random 2D points and creates a Kdtree from them.
+It then generates a random 2D point and searches for its nearest neighbors and its neighbors within a radius.
 
 ### How to build
 ```
